@@ -1,2 +1,5 @@
 /.venv
 note.txt
+/.idea
+/src/__pycache__
+/src/api/__pycache__

@@ -1,33 +1,46 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
-
-models = [
-    "Qwen/Qwen2-1.5B-Instruct",
-    "Qwen/Qwen2-7B-Instruct",
-    "Qwen/Qwen2-14B-Instruct",
-    "Qwen/Qwen2-1.5B-Chat",
-    "Qwen/Qwen2-7B-Chat",
-    "Qwen/Qwen2-14B-Chat"
-]
+from popular_models import popular_ai_models
 
 class AiModel:
     """
     A class to encapsulate the Qwen language model and tokenizer for text generation.
     Handles model loading, tokenizer configuration, and response generation.
     """
-
     def __init__(self, model_id: str = "Qwen/Qwen2-1.5B-Instruct", device: str = "cpu"):
         """
-        Initializes the AiModel with a specified model and device.
+        Initializes the AiModel with a specified model ID and device.
+        Note: The actual model and tokenizer loading is deferred to the 'load' method.
 
         Args:
             model_id (str): The Hugging Face model ID (e.g., "Qwen/Qwen2-1.5B-Instruct").
-            device (str): The device to load the model on ("cpu" or "cuda").
+            device (str): The device to potentially load the model on ("cpu" or "cuda").
         """
         self.model_id = model_id
         # Set the torch device. "cuda" for GPU if available, otherwise "cpu".
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+
+        # Initialize model and tokenizer to None; they will be loaded later
+        self.tokenizer = None
+        self.model = None
+        self.load_model(model_id)
+        print(f"[{time.time()}] AiModel instance initialized. Call .load_model() to load the model.")
+
+    def load_model(self, model_id: str = None):
+        """
+        Loads the tokenizer and the language model.
+        This method should be called after the AiModel object is initialized.
+
+        Args:
+            model_id (str, optional): The Hugging Face model ID to load.
+                                      If None, uses the model_id provided during __init__.
+        """
+        if model_id:
+            self.model_id = model_id
+        
+        if not self.model_id:
+            raise ValueError("Model ID not specified. Please provide it during initialization or in the load method.")
 
         print(f"[{time.time()}] Loading tokenizer for {self.model_id}...")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
@@ -83,10 +96,6 @@ class AiModel:
                 "{% endif %}"
                 "{% endfor %}<|im_start|>assistant\n"
             )
-
-        print(f"[{time.time()}] Initialized: pad_token_id={self.tokenizer.pad_token_id}, eos_token_id={self.tokenizer.eos_token_id}")
-        print(f"[{time.time()}] Tokenizer has chat template: {bool(getattr(self.tokenizer, 'chat_template', None))}")
-        print(f"[{time.time()}] Model successfully loaded on {self.device}.")
 
     def generate_response(self, text: str) -> str:
         """
