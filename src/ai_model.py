@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
+from typing import Optional
 
 class AiModel:
     """
@@ -96,7 +97,7 @@ class AiModel:
                 "{% endfor %}<|im_start|>assistant\n"
             )
 
-    def generate_response(self, text: str) -> str:
+    def generate_response(self, text: str, n_tokens: Optional[int] = 100) -> str:
         """
         Generates a text response from the Qwen model based on the input text.
 
@@ -132,28 +133,24 @@ class AiModel:
             raise RuntimeError("tokenizer.pad_token_id is None; make sure you set tokenizer.pad_token and/or eos_token, then resize embeddings if you added tokens.")
         attention_mask = (input_ids != pad_id).long()
 
-        print(f"time 1 {time.time() - start}")
-
         input_ids = input_ids.to(self.device)
         attention_mask = attention_mask.to(self.device)
-
-        print(f"time 2 {time.time() - start}")
 
         with torch.no_grad():
             output_ids = self.model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
-                max_new_tokens=100, # Limit the number of new tokens generated
+                max_new_tokens=n_tokens, # Limit the number of new tokens generated
                 do_sample=True,     # Enable sampling for more varied responses
                 use_cache=True,    # As per your original configuration (Note: often True for speed)
                 pad_token_id=self.tokenizer.pad_token_id
             )
         
-        print(f"time 3 {time.time() - start}")
         new_tokens = output_ids[0][input_ids.shape[-1]:]
         answer = self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
-        print(f"time 4 {time.time() - start}")
+        print(f"Response generated in {time.time() - start:.2f} seconds.")
+
         return answer
 
 main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")

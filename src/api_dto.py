@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class SummaryResponse(BaseModel):
     transcript: str
@@ -9,3 +10,4 @@ class AnswerResponse(BaseModel):
 
 class SummaryRequest(BaseModel):
     text: str
+    n_tokens: Optional[int] = 100
