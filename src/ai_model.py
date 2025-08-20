@@ -111,6 +111,8 @@ class AiModel:
             RuntimeError: If tokenizer padding ID is missing or chat template fails.
         """
 
+        start = time.time()
+        print(f"Generating response for: {text}")
         messages = [
             {"role": "user", "content": f"{text.strip()}"}
         ]
@@ -131,23 +133,28 @@ class AiModel:
             raise RuntimeError("tokenizer.pad_token_id is None; make sure you set tokenizer.pad_token and/or eos_token, then resize embeddings if you added tokens.")
         attention_mask = (input_ids != pad_id).long()
 
-        # Move input tensors to the correct device (CPU/GPU)
+        print(f"time 1 {time.time() - start}")
+
         input_ids = input_ids.to(self.device)
         attention_mask = attention_mask.to(self.device)
 
-        with torch.no_grad(): # Disable gradient calculation for inference to save memory and speed up
+        print(f"time 2 {time.time() - start}")
+
+        with torch.no_grad():
             output_ids = self.model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 max_new_tokens=100, # Limit the number of new tokens generated
                 do_sample=True,     # Enable sampling for more varied responses
-                use_cache=False,    # As per your original configuration (Note: often True for speed)
+                use_cache=True,    # As per your original configuration (Note: often True for speed)
                 pad_token_id=self.tokenizer.pad_token_id
             )
         
+        print(f"time 3 {time.time() - start}")
         new_tokens = output_ids[0][input_ids.shape[-1]:]
         answer = self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
+        print(f"time 4 {time.time() - start}")
         return answer
 
 # --- Example Usage (for standalone testing) ---

@@ -11,7 +11,7 @@ router = APIRouter(
 )
 
 @router.get("/")
-def root():
+async def root():
     return {"message": "Upload an MP3 file to /summarize to get transcript and summary."}
 
 @router.post("/summarize-text", response_model=SummaryResponse)

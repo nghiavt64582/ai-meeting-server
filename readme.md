@@ -4,4 +4,4 @@
     + Window: .\.venv\Scripts\activate
     + MacOS/Linux: source .venv/bin/activate
   + Cài đặt các thư viện cần thiết: pip install -r requirements.txt
-  + Chạy ứng dụng: uvicorn rest:app --reload
+  + Chạy ứng dụng: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
