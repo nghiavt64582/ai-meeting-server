@@ -1,7 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
-from popular_models import popular_ai_models
 
 class AiModel:
     """
@@ -156,6 +155,8 @@ class AiModel:
 
         print(f"time 4 {time.time() - start}")
         return answer
+
+main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 
 # --- Example Usage (for standalone testing) ---
 if __name__ == "__main__" and False:

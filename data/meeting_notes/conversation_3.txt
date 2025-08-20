@@ -1,0 +1,20 @@
+Olivia: Good morning, everyone. Thanks for making the time. Today, we're diving into the performance of our Q2 "Summer Vibe" digital campaign. Maria, could you walk us through the key metrics and overall results?
+Maria: Good morning. For the "Summer Vibe" campaign, our primary goal was to increase website traffic by 15% and lead generation by 10%. We saw a 12% increase in traffic, falling slightly short, but a fantastic 15% increase in leads, exceeding our target!
+Jake: That's great news on the leads! Where did the strongest lead performance come from? Was it primarily social, or did search ads also perform well?
+Maria: The highest quality leads predominantly came from our Facebook and Instagram ad sets, particularly those featuring user-generated content. Google Ads provided a steady volume, but conversion rates were slightly lower compared to social.
+Chris: Interesting. So the authenticity of the user-generated visuals resonated more deeply. What about engagement rates on the social posts? Were there any specific creative assets that outperformed others?
+Jake: Yes, the short-form video ads on Instagram Reels showing product usage in real-life scenarios had significantly higher view-through rates and click-throughs. The static image carousels performed decently, but lacked that dynamic appeal.
+Olivia: That aligns with our hypothesis about video first. Chris, were there any specific elements in those top-performing videos that we can replicate for future campaigns?
+Chris: Definitely. The success points to a clear message: people want to see themselves using the product. We leaned into bright, natural lighting and a casual, aspirational tone. We also used upbeat, trending audio which helped immensely.
+Maria: I'd add that the A/B tests on call-to-action buttons showed a clear preference for "Shop Now & Save" over "Explore Our Collection." Directness seemed to drive conversions.
+Sophia: That's valuable insight for the sales team. Were there any particular demographics or regions where we saw an unexpected surge or a weaker performance?
+Jake: We saw a stronger than anticipated response from the 18-24 age group on TikTok and Instagram, especially in coastal regions. Performance was a bit weaker in Midwestern states, possibly due to our messaging not fully resonating there.
+Olivia: Okay, so we might need to localize our messaging for different regions in the future. Jake, what were the major budget allocations, and did we see a good ROI on all channels?
+Jake: We allocated about 60% to social, 30% to search, and 10% to display. Social media ROI was exceptional, given the lead volume. Display ads yielded lower engagement, as expected, but provided good brand visibility.
+Chris: For the next campaign, I propose we lean heavily into user-generated content campaigns and possibly integrate micro-influencers to amplify that authentic feel. We could also explore more interactive ad formats.
+Olivia: I agree, Chris. Maria, can you prepare a deeper dive into the demographic performance by region? And Jake, let's start sketching out a revised channel strategy for Q3 based on these findings, with an increased focus on high-performing social channels and user-generated content.
+Maria: Will do, Olivia. I'll have that analysis by end of day tomorrow.
+Jake: And I'll present a refined channel allocation and content calendar next week.
+Olivia: Excellent. Any other quick thoughts or challenges we should note?
+Chris: Just ensuring we have enough new, fresh creative assets to sustain the next campaign's demand.
+Olivia: Noted. We'll prioritize creative production. Thanks, team. This was a very productive review.

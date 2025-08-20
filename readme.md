@@ -1,5 +1,5 @@
 1. Các lệnh:
-  + Tạo môi trường ảo: python -m venv venv
+  + Tạo môi trường ảo: python -m venv .venv
   + Kích hoạt virtual environment:
     + Window: .\.venv\Scripts\activate
     + MacOS/Linux: source .venv/bin/activate

@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 from api_dto import *
-from ai_model import *
+from ai_model import main_model
 
-ai_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 
 router = APIRouter(
     prefix="/ai-model",
@@ -17,10 +16,10 @@ async def root():
 @router.post("/summarize-text", response_model=SummaryResponse)
 async def summarize_text(req: SummaryRequest):
     text = req.text.strip()
-    answer = ai_model.generate_response(f"Summary this conversation : {text}")
+    answer = main_model.generate_response(f"Summary this conversation : {text}")
     return SummaryResponse(transcript=text, summary=answer)
 
 @router.post("/question", response_model=AnswerResponse)
 async def answer_questions(req: SummaryRequest):
-    answer = ai_model.generate_response(req.text)
+    answer = main_model.generate_response(req.text)
     return AnswerResponse(answer=answer)
