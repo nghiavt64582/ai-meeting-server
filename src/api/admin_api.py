@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from api_dto import *
-from voice_model import *
-from ai_model import *
+from service.ai_model import *
+from service.voice_model import *
 from popular_models import popular_ai_models
 
 router = APIRouter(

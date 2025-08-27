@@ -2,6 +2,9 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AiModel:
     """
@@ -25,7 +28,7 @@ class AiModel:
         self.tokenizer = None
         self.model = None
         self.load_model(model_id)
-        print(f"[{time.time()}] AiModel instance initialized. Call .load_model() to load the model.")
+        logging.info(f"[{time.time()}] AiModel instance initialized. Call .load_model() to load the model.")
 
     def load_model(self, model_id: str = None):
         """
@@ -42,7 +45,7 @@ class AiModel:
         if not self.model_id:
             raise ValueError("Model ID not specified. Please provide it during initialization or in the load method.")
 
-        print(f"[{time.time()}] Loading tokenizer for {self.model_id}...")
+        logging.info(f"[{time.time()}] Loading tokenizer for {self.model_id}...")
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=True)
 
         need_resize_embeddings = False
@@ -71,7 +74,7 @@ class AiModel:
         # Set padding side to 'left' for efficient generation
         self.tokenizer.padding_side = "left"
 
-        print(f"[{time.time()}] Loading model {self.model_id} to {self.device}...")
+        logging.info(f"[{time.time()}] Loading model {self.model_id} to {self.device}...")
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
             torch_dtype=torch.float32, # Using float32 as specified in original code
@@ -80,7 +83,7 @@ class AiModel:
         
         # Resize token embeddings if new special tokens were added
         if need_resize_embeddings:
-            print(f"[{time.time()}] Resizing token embeddings to {len(self.tokenizer)}...")
+            logging.info(f"[{time.time()}] Resizing token embeddings to {len(self.tokenizer)}...")
             self.model.resize_token_embeddings(len(self.tokenizer))
 
         self.model.config.use_cache = False # Keep use_cache False as in your original setup
@@ -112,7 +115,7 @@ class AiModel:
         """
 
         start = time.time()
-        print(f"Generating response for: {text} with max tokens: {n_tokens}")
+        logging.info(f"Generating response for: {text} with max tokens: {n_tokens}")
         messages = [
             {"role": "user", "content": f"{text.strip()}"}
         ]
@@ -149,7 +152,7 @@ class AiModel:
         new_tokens = output_ids[0][input_ids.shape[-1]:]
         answer = self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
-        print(f"Response generated in {time.time() - start:.2f} seconds.")
+        logging.info(f"Response generated in {time.time() - start:.2f} seconds.")
 
         return answer
     
@@ -164,20 +167,20 @@ main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 
 # --- Example Usage (for standalone testing) ---
 if __name__ == "__main__" and False:
-    print("Starting AiModel demonstration...")
+    logging.info("Starting AiModel demonstration...")
 
     model_handler = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu") # Default for CPU
 
-    print("\n--- Generating first response ---")
+    logging.info("\n--- Generating first response ---")
     test_question_1 = "What is the capital of France?"
     response_1 = model_handler.generate_response(test_question_1)
-    print(f"\nUser: {test_question_1}")
-    print(f"AI: {response_1}")
+    logging.info(f"\nUser: {test_question_1}")
+    logging.info(f"AI: {response_1}")
 
-    print("\n--- Generating second response ---")
+    logging.info("\n--- Generating second response ---")
     test_question_2 = "Tell me a short story about a brave knight."
     response_2 = model_handler.generate_response(test_question_2)
-    print(f"\nUser: {test_question_2}")
-    print(f"AI: {response_2}")
+    logging.info(f"\nUser: {test_question_2}")
+    logging.info(f"AI: {response_2}")
 
-    print("\nDemonstration complete.")
+    logging.info("\nDemonstration complete.")

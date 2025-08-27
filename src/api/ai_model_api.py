@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from api_dto import *
-from ai_model import main_model
+from service.ai_model import main_model
 
 
 router = APIRouter(
