@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from api import ai_model_api
 from api import admin_api
+from api import sound_api
 
 app = FastAPI(
     title="My Modular FastAPI App",
@@ -10,6 +11,7 @@ app = FastAPI(
 
 app.include_router(ai_model_api.router)
 app.include_router(admin_api.router)
+app.include_router(sound_api.router)
 
 @app.get("/")
 async def root():

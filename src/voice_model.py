@@ -12,10 +12,12 @@ class VoiceModel:
             logging.error("Failed to load Whisper model: %s", e)
             raise
     
-    def convert_audio_to_text(self, audio_path: str) -> str:
+    def transcribe(self, audio_path: str) -> str:
         try:
             result = self.whisper_model.transcribe(audio_path)
             return result['text']
         except Exception as e:
             logging.error("Error during transcription: %s", e)
             return ""
+
+voice_model = VoiceModel(model_id="base", device="cpu")

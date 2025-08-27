@@ -112,7 +112,7 @@ class AiModel:
         """
 
         start = time.time()
-        print(f"Generating response for: {text}")
+        print(f"Generating response for: {text} with max tokens: {n_tokens}")
         messages = [
             {"role": "user", "content": f"{text.strip()}"}
         ]
@@ -152,6 +152,13 @@ class AiModel:
         print(f"Response generated in {time.time() - start:.2f} seconds.")
 
         return answer
+    
+    def summarize(self, text: str, n_tokens: Optional[int] = 1000) -> str:
+        """
+        Generate a summary of the provided text using the AI model.
+        """
+        prompt = f"Summarize the following text:\n{text}\nSummary:"
+        return self.generate_response(prompt, n_tokens=n_tokens)
 
 main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 

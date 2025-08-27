@@ -11,7 +11,7 @@ router = APIRouter(
 
 @router.get("/")
 async def root():
-    return {"message": "Upload an MP3 file to /summarize to get transcript and summary."}
+    return {"message": "Send a request to the AI model."}
 
 @router.post("/summarize-text", response_model=SummaryResponse)
 async def summarize_text(req: SummaryRequest):
@@ -21,5 +21,5 @@ async def summarize_text(req: SummaryRequest):
 
 @router.post("/question", response_model=AnswerResponse)
 async def answer_questions(req: SummaryRequest):
-    answer = main_model.generate_response(req.text)
+    answer = main_model.generate_response(req.text, req.n_tokens)
     return AnswerResponse(answer=answer)

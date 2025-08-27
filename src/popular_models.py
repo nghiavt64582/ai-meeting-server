@@ -24,6 +24,10 @@ popular_ai_models = [
         "description": "A smaller, more efficient version of the Qwen model, optimized for instruction following and suitable for resource-constrained environments."
     },
     {
+        "id": "Qwen/Qwen3-4B-Thinking-2507",
+        "description": "A 4-billion parameter language model from Alibaba Cloud, designed for advanced reasoning and thinking tasks."
+    },
+    {
         "id": "microsoft/Phi-3-mini-4k-instruct",
         "description": "A small, yet powerful language model by Microsoft, designed for instruction following and capable of handling longer contexts."
     },
