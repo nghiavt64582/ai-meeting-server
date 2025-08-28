@@ -5,3 +5,4 @@ note.txt
 /src/api/__pycache__
 /data/audio
 /log
+/test

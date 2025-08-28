@@ -25,7 +25,8 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
     """
     start_time = time.time()
     content = voice_model.transcribe_audio(audio_file)
-    logger.info(f"Transcription took {time.time() - start_time:.2f} seconds.")
+    number_of_words = content.count(' ') + content.count('.')
+    logger.info(f"Transcription took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
     if content:
         return {
             "status_code": 200,

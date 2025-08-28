@@ -1,5 +1,9 @@
 popular_ai_models = [
     {
+        "id": "tiiuae/Falcon3-3B-Base",
+        "description": "A 3-billion parameter language model by TII, designed for various NLP tasks."
+    },
+    {
         "id": "meta-llama/Llama-2-7b-chat-hf",
         "description": "A powerful 7-billion parameter language model by Meta, fine-tuned for conversational AI and chat applications."
     },
