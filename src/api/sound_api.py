@@ -30,7 +30,10 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
     if content:
         return {
             "status_code": 200,
-            "content": {"transcription": content}
+            "content": {
+                "transcription": content,
+                "number_of_words": number_of_words
+            }
         }
     else:
         return {
@@ -38,7 +41,7 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
             "content": {"message": "An error occurred during transcription."}
         }
 
-@router.post("/summarize")
+@router.post("/summarize-audio")
 async def summarize_audio(audio_file: UploadFile = File(...)):
     """
     Summary an audio with a few sentences
@@ -46,17 +49,44 @@ async def summarize_audio(audio_file: UploadFile = File(...)):
 
     start_time = time.time()
     content = voice_model.transcribe_audio(audio_file)
-    logger.info(f"Transcription took {time.time() - start_time:.2f} seconds.")
+    number_of_words = content.count(' ') + content.count('.')
+    time_1 = time.time()
+    logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
     summarized_text = main_model.summarize(content)
-    logger.info(f"Summarization took {time.time() - start_time:.2f} seconds.")
-    
+    logger.info(f"Summarization took {time.time() - time_1:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - time_1):.2f}")
+
     if content:
         return {
             "status_code": 200,
-            "content": {"summary": summarized_text}
+            "content": {
+                "transcription": content,
+                "summary": summarized_text,
+                "number_of_words": number_of_words
+            }
         }
     else:
         return {
             "status_code": 500,
             "content": {"message": "An error occurred during transcription."}
+        }
+    
+@router.post("/summarize-text")
+async def summarize_text(content: str):
+    start_time = time.time()
+    summarized_text = main_model.summarize(content)
+    number_of_words = content.count(' ') + content.count('.')
+    logger.info(f"Summarization took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
+
+    if summarized_text:
+        return {
+            "status_code": 200,
+            "content": {
+                "summary": summarized_text,
+                "number_of_words": number_of_words
+            }
+        }
+    else:
+        return {
+            "status_code": 500,
+            "content": {"message": "An error occurred during summarization."}
         }
