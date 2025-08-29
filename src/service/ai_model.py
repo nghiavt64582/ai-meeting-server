@@ -69,16 +69,25 @@ class AiModel:
             # If EOS exists, reuse it for PAD
             self.tokenizer.pad_token = self.tokenizer.eos_token
         
+        # Get the model's maximum input length (for BART-large-cnn, it's typically 1024)
+        max_model_input_length = self.tokenizer.model_max_length
+        logger.info(f"Model max input length: {max_model_input_length}")
+
         # Set padding side to 'left' for efficient generation
         self.tokenizer.padding_side = "left"
 
         logger.info(f"[{time.time()}] Loading model {self.model_id} to {self.device}...")
+
+        start_time = time.time()
+
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
             torch_dtype=torch.float32, # Using float32 as specified in original code
             trust_remote_code=True,
         ).to(self.device) # Move the model to the determined device
-        
+
+        logger.info(f"Model {self.model_id} loaded successfully. Total time {time.time() - start_time:.2f} seconds.")
+
         # Resize token embeddings if new special tokens were added
         if need_resize_embeddings:
             logger.info(f"[{time.time()}] Resizing token embeddings to {len(self.tokenizer)}...")
@@ -97,6 +106,16 @@ class AiModel:
                 "{% endif %}"
                 "{% endfor %}<|im_start|>assistant\n"
             )
+
+    def preload_model(self, model_id: str):
+        try:
+            logger.info(f"\nLoading tokenizer for: {model_id}...")
+            start_time = time.time()
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            logger.info(f"Successfully loaded tokenizer for {model_id}. Total time : {time.time() - start_time:.2f} seconds.")
+        except Exception as e:
+            logger.info(f"ERROR: Could not load tokenizer for {model_id}. Reason: {e}")
+            logger.info("Please check if the model name is correct and you have an internet connection if not cached locally.")
 
     def generate_response(self, text: str, n_tokens: Optional[int] = 100) -> str:
         """

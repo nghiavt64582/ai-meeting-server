@@ -1,5 +1,4 @@
 from fastapi import APIRouter, FastAPI, File, UploadFile
-from api_dto import *
 import os
 import shutil
 import time
@@ -18,13 +17,14 @@ async def root():
     logger.info("Sound API root accessed.")
     return {"message": "Upload an MP3 file to /summarize to get transcript and summary."}
 
-@router.post("/transcribe")
+@router.post("/transcribe-audio")
 async def transcribe_audio(audio_file: UploadFile = File(...)):
     """
     Transcribes an uploaded audio file using the Whisper model.
     """
     start_time = time.time()
-    content = voice_model.transcribe_audio(audio_file)
+    transcribed_data = voice_model.transcribe_audio(audio_file)
+    content = transcribed_data.get("content", "")
     number_of_words = content.count(' ') + content.count('.')
     logger.info(f"Transcription took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
     if content:
@@ -48,7 +48,8 @@ async def summarize_audio(audio_file: UploadFile = File(...)):
     """
 
     start_time = time.time()
-    content = voice_model.transcribe_audio(audio_file)
+    transcribed_data = voice_model.transcribe_audio(audio_file)
+    content = transcribed_data.get("content", "")
     number_of_words = content.count(' ') + content.count('.')
     time_1 = time.time()
     logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
