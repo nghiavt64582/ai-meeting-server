@@ -6,3 +6,5 @@ note.txt
 /data/audio
 /log
 /test
+.env
+/test
