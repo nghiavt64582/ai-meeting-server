@@ -23,7 +23,7 @@ async def set_model(model_id: str):
     if model_id not in [model["id"] for model in popular_ai_models]:
         return {"error": "Invalid model ID"}
     # set model
-    main_model.load_model(model_id)
+    ai_model.load_model(model_id)
     return {"message": f"Model set to {model_id}"}
 
 @router.post("/preload-model")
@@ -31,5 +31,5 @@ async def preload_model(model_id: str):
     if model_id not in [model["id"] for model in popular_ai_models]:
         return {"error": "Invalid model ID"}
 
-    main_model.preload_model(model_id)
+    ai_model.preload_model(model_id)
     return {"message": f"Model {model_id} preloaded successfully."}

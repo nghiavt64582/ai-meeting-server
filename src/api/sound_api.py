@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 import time
 from service.voice_model import voice_model
-from service.ai_model import main_model
+from service.ai_model import ai_model
 from service.logger_setup import logger
 from api_dto import *
 
@@ -17,7 +17,10 @@ async def root():
     return {"message": "Upload an MP3 file to /summarize to get transcript and summary."}
 
 @router.post("/transcribe-audio")
-async def transcribe_audio(audio_file: UploadFile = File(...)):
+async def transcribe_audio(
+    audio_file: UploadFile = File(...),
+    model: str = "os"
+):
     """
     Transcribes an uploaded audio file using the Whisper model.
     """
@@ -41,7 +44,11 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
         }
 
 @router.post("/summarize-audio")
-async def summarize_audio(audio_file: UploadFile = File(...), summary_prompt: Optional[str] = "Summarize this conversation in a few sentences :"):
+async def summarize_audio(
+    audio_file: UploadFile = File(...), 
+    summary_prompt: Optional[str] = "Summarize this conversation in a few sentences :",
+    model: str = "os"
+):
     """
     Summary an audio with a few sentences
     """
@@ -53,7 +60,7 @@ async def summarize_audio(audio_file: UploadFile = File(...), summary_prompt: Op
     time_1 = time.time()
     logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
     logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content[:50]}")
-    summarized_text = main_model.summarize(text=content, summary_prompt=summary_prompt)
+    summarized_text = ai_model.summarize(text=content, summary_prompt=summary_prompt, is_use_gemini=model=="gemini")
     logger.info(f"Summarization took {time.time() - time_1:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - time_1):.2f}")
 
     if content:
@@ -72,9 +79,13 @@ async def summarize_audio(audio_file: UploadFile = File(...), summary_prompt: Op
         }
     
 @router.post("/summarize-text")
-async def summarize_text(content: str, summary_prompt: str = "Summarize this conversation in a few sentences :"):
+async def summarize_text(
+    content: str, 
+    summary_prompt: str = "Summarize this conversation in a few sentences :",
+    model: str = "os"
+):
     start_time = time.time()
-    summarized_text = main_model.summarize(text=content, summary_prompt=summary_prompt)
+    summarized_text = ai_model.summarize(text=content, summary_prompt=summary_prompt, is_use_gemini=model=="gemini")
     number_of_words = content.count(' ') + content.count('.')
     logger.info(f"Summarization took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
 

@@ -3,6 +3,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 from typing import Optional
 from service.logger_setup import logger
+import requests
+import os
 
 class AiModel:
     """
@@ -26,6 +28,8 @@ class AiModel:
         self.tokenizer = None
         self.model = None
         self.load_model(model_id)
+        self.gemini_api_key = open("../.env").read().strip().split("=")[1]
+        logger.info(f"Gemini API key loaded: {self.gemini_api_key[:5]}")
         logger.info(f"[{time.time()}] AiModel instance initialized. Call .load_model() to load the model.")
 
     def load_model(self, model_id: str = None):
@@ -82,21 +86,18 @@ class AiModel:
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
-            torch_dtype=torch.float32, # Using float32 as specified in original code
+            torch_dtype=torch.float32,
             trust_remote_code=True,
-        ).to(self.device) # Move the model to the determined device
-
+        ).to(self.device)
         logger.info(f"Model {self.model_id} loaded successfully. Total time {time.time() - start_time:.2f} seconds.")
 
-        # Resize token embeddings if new special tokens were added
         if need_resize_embeddings:
             logger.info(f"[{time.time()}] Resizing token embeddings to {len(self.tokenizer)}...")
             self.model.resize_token_embeddings(len(self.tokenizer))
 
-        self.model.config.use_cache = False # Keep use_cache False as in your original setup
-        self.model.eval() # Set model to evaluation mode
+        self.model.config.use_cache = False
+        self.model.eval()
 
-        # Supply a minimal ChatML template if missing for consistent conversation formatting
         if not getattr(self.tokenizer, "chat_template", None):
             self.tokenizer.chat_template = (
                 "{% for m in messages %}"
@@ -118,18 +119,6 @@ class AiModel:
             logger.info("Please check if the model name is correct and you have an internet connection if not cached locally.")
 
     def generate_response(self, text: str, n_tokens: Optional[int] = 100) -> str:
-        """
-        Generates a text response from the Qwen model based on the input text.
-
-        Args:
-            text (str): The input text (user's question/query).
-
-        Returns:
-            str: The generated response from the AI model.
-
-        Raises:
-            RuntimeError: If tokenizer padding ID is missing or chat template fails.
-        """
 
         start = time.time()
         logger.info(f"Generating response for: {text[:50]}... with max tokens: {n_tokens}")
@@ -172,16 +161,47 @@ class AiModel:
         logger.info(f"Response generated in {time.time() - start:.2f} seconds.")
 
         return answer
+    
+    def generate_response_by_gemini_api(self, text: str) -> str:
+        logger.info(f"Generating response using Gemini API for: {text[:50]}...")
+        gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+        res = requests.post(gemini_url, json={
+            "contents":[
+                {
+                    "parts":[
+                        {
+                            "text":text
+                        }
+                    ]
+                }
+            ]
+        }, headers={"X-goog-api-key": self.gemini_api_key})
+        if res.status_code == 200:
+            json = res.json()
+            data = json["candidates"][0]["content"]["parts"][0]["text"]
+            return data
+        else:
+            logger.error(f"Error occurred: {res.status_code}, {res.text}")
+            return {"error": "Failed to generate response"}
 
-    def summarize(self, text: str, summary_prompt: str = "Summarize this conversation in a few sentences :", n_tokens: Optional[int] = 1000) -> str:
+    def summarize(
+        self, 
+        text: str, 
+        summary_prompt: str = "Summarize this conversation in a few sentences :", 
+        n_tokens: Optional[int] = 1000,
+        is_use_gemini: bool = False
+    ) -> str:
         """
         Generate a summary of the provided text using the AI model.
         """
         prompt = f"{summary_prompt}\n{text}"
         logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text[:50]}, n_tokens: {n_tokens}")
-        return self.generate_response(prompt, n_tokens=n_tokens)
+        if is_use_gemini:
+            return self.generate_response_by_gemini_api(prompt)
+        else:
+            return self.generate_response(prompt, n_tokens=n_tokens)
 
-main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
+ai_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 
 # --- Example Usage (for standalone testing) ---
 if __name__ == "__main__" and False:
