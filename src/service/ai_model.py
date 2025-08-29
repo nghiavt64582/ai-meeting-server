@@ -172,12 +172,13 @@ class AiModel:
         logger.info(f"Response generated in {time.time() - start:.2f} seconds.")
 
         return answer
-    
-    def summarize(self, text: str, n_tokens: Optional[int] = 1000) -> str:
+
+    def summarize(self, text: str, summary_prompt: str = "Summarize this conversation in a few sentences :", n_tokens: Optional[int] = 1000) -> str:
         """
         Generate a summary of the provided text using the AI model.
         """
-        prompt = f"Summarize the following text:\n{text}\nSummary:"
+        prompt = f"{summary_prompt}\n{text}"
+        logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text[:50]}, n_tokens: {n_tokens}")
         return self.generate_response(prompt, n_tokens=n_tokens)
 
 main_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")

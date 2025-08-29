@@ -1,10 +1,9 @@
-from fastapi import APIRouter, FastAPI, File, UploadFile
-import os
-import shutil
+from fastapi import APIRouter, File, UploadFile
 import time
 from service.voice_model import voice_model
 from service.ai_model import main_model
 from service.logger_setup import logger
+from api_dto import *
 
 router = APIRouter(
     prefix="/sound",
@@ -42,7 +41,7 @@ async def transcribe_audio(audio_file: UploadFile = File(...)):
         }
 
 @router.post("/summarize-audio")
-async def summarize_audio(audio_file: UploadFile = File(...)):
+async def summarize_audio(audio_file: UploadFile = File(...), summary_prompt: Optional[str] = "Summarize this conversation in a few sentences :"):
     """
     Summary an audio with a few sentences
     """
@@ -53,7 +52,8 @@ async def summarize_audio(audio_file: UploadFile = File(...)):
     number_of_words = content.count(' ') + content.count('.')
     time_1 = time.time()
     logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
-    summarized_text = main_model.summarize(content)
+    logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content[:50]}")
+    summarized_text = main_model.summarize(text=content, summary_prompt=summary_prompt)
     logger.info(f"Summarization took {time.time() - time_1:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - time_1):.2f}")
 
     if content:
@@ -72,9 +72,9 @@ async def summarize_audio(audio_file: UploadFile = File(...)):
         }
     
 @router.post("/summarize-text")
-async def summarize_text(content: str):
+async def summarize_text(content: str, summary_prompt: str = "Summarize this conversation in a few sentences :"):
     start_time = time.time()
-    summarized_text = main_model.summarize(content)
+    summarized_text = main_model.summarize(text=content, summary_prompt=summary_prompt)
     number_of_words = content.count(' ') + content.count('.')
     logger.info(f"Summarization took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
 
