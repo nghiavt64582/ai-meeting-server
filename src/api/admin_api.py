@@ -26,6 +26,10 @@ async def set_model(model_id: str):
     ai_model.load_model(model_id)
     return {"message": f"Model set to {model_id}"}
 
+@router.get("/current-model")
+async def get_current_model():
+    return {"current_model": ai_model.get_cur_model()}
+
 @router.post("/preload-model")
 async def preload_model(model_id: str):
     if model_id not in [model["id"] for model in popular_ai_models]:

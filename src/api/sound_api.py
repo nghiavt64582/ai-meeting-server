@@ -18,8 +18,7 @@ async def root():
 
 @router.post("/transcribe-audio")
 async def transcribe_audio(
-    audio_file: UploadFile = File(...),
-    model: str = "os"
+    audio_file: UploadFile = File(...)
 ):
     """
     Transcribes an uploaded audio file using the Whisper model.

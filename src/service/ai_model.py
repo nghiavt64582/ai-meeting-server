@@ -121,7 +121,7 @@ class AiModel:
     def generate_response(self, text: str, n_tokens: Optional[int] = 100) -> str:
 
         start = time.time()
-        logger.info(f"Generating response for: {text[:50]}... with max tokens: {n_tokens}")
+        logger.info(f"Generating response for: {text}... with max tokens: {n_tokens}")
         messages = [
             {"role": "user", "content": f"{text.strip()}"}
         ]
@@ -163,7 +163,7 @@ class AiModel:
         return answer
     
     def generate_response_by_gemini_api(self, text: str) -> str:
-        logger.info(f"Generating response using Gemini API for: {text[:50]}...")
+        logger.info(f"Generating response using Gemini API for: {text}...")
         gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         res = requests.post(gemini_url, json={
             "contents":[
@@ -195,11 +195,14 @@ class AiModel:
         Generate a summary of the provided text using the AI model.
         """
         prompt = f"{summary_prompt}\n{text}"
-        logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text[:50]}, n_tokens: {n_tokens}")
+        logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text}, n_tokens: {n_tokens}")
         if is_use_gemini:
             return self.generate_response_by_gemini_api(prompt)
         else:
             return self.generate_response(prompt, n_tokens=n_tokens)
+        
+    def get_cur_model(self) -> str:
+        return self.model_id
 
 ai_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
 
