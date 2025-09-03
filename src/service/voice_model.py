@@ -12,8 +12,9 @@ class VoiceModel:
     A class to handle voice model operations, including loading the model and generating responses.
     """
     def __init__(self, model_id: str, device: str = "cpu"):
+        # os.environ["PATH"] += r";C:\Users\Administrator\Desktop\ffmpeg-7.1.1-essentials_build\bin"
         try:
-            self.whisper_model = whisper.load_model("base")
+            self.whisper_model = whisper.load_model("base", device=device)
         except Exception as e:
             logging.error("Failed to load Whisper model: %s", e)
             raise
@@ -32,11 +33,10 @@ class VoiceModel:
             logger.info(f"Uploaded file: {audio_file.filename}, size {size_st}")
 
             logger.info(f"Transcribing file: {audio_file.filename}")
-            content = self.whisper_model.transcribe(temp_file_path)['text']
+            content = self.whisper_model.transcribe(temp_file_path, language="en")['text']
 
             duration = self.get_duration(temp_file_path)
             logger.info(f"Duration of file: {audio_file.filename}, duration {duration} s")
-
             return {
                 "content": content,
                 "size": size_st,

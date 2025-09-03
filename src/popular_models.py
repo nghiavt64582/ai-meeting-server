@@ -12,8 +12,8 @@ popular_ai_models = [
         "description": "A high-performance 7-billion parameter language model by Mistral AI, optimized for instruction following and chat."
     },
     {
-        "id": "HuggingFaceH4/zephyr-7b-beta",
-        "description": "A fine-tuned version of Mistral 7B, optimized for helpfulness and harmlessness, often used in conversational agents."
+        "id": "Qwen/Qwen-1_8B-Chat-Int4",
+        "description": "A compact 1.8-billion parameter version of the Qwen model, designed for efficient chat and instruction tasks."
     },
     {
         "id": "Qwen/Qwen-7B-Chat",
@@ -33,30 +33,27 @@ popular_ai_models = [
     },
     {
         "id": "microsoft/Phi-3-mini-4k-instruct",
+        "number_of_parameters": "1.3B",
         "description": "A small, yet powerful language model by Microsoft, designed for instruction following and capable of handling longer contexts."
     },
     {
         "id": "bert-base-uncased",
+        "number_of_parameters": "110M",
         "description": "Google's foundational bidirectional encoder model, widely used for text understanding tasks like classification and sentiment analysis."
     },
     {
         "id": "roberta-base",
+        "number_of_parameters": "125M",
         "description": "A robustly optimized BERT approach by Facebook, known for improved training methodology leading to better performance on various NLP tasks."
     },
     {
-        "id": "distilbert-base-uncased",
-        "description": "A distilled version of BERT, offering similar performance with significantly fewer parameters and faster inference, ideal for efficiency."
-    },
-    {
-        "id": "microsoft/deberta-v3-base",
-        "description": "Microsoft's advanced BERT-like model, which enhances the attention mechanism and uses a disentangled attention strategy for better performance."
-    },
-    {
         "id": "google-t5/t5-base",
+        "number_of_parameters": "220M",
         "description": "Google's 'Text-to-Text Transfer Transformer' that frames all NLP problems as a text-to-text task, useful for translation, summarization, and more."
     },
     {
         "id": "facebook/bart-large-cnn",
+        "number_of_parameters": "406M",
         "description": "A powerful sequence-to-sequence model by Facebook AI, particularly strong in abstractive summarization tasks for news articles."
     },
     {

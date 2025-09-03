@@ -5,6 +5,7 @@ from typing import Optional
 from service.logger_setup import logger
 import requests
 import os
+from huggingface_hub import HfFolder
 
 class AiModel:
     """
@@ -20,9 +21,15 @@ class AiModel:
             model_id (str): The Hugging Face model ID (e.g., "Qwen/Qwen2-1.5B-Instruct").
             device (str): The device to potentially load the model on ("cpu" or "cuda").
         """
+        # if device is running on Windows, cache the hugging face in D:/.cache
+        if os.name == "nt":
+            print("set cache in D")
+            os.environ["TRANSFORMERS_CACHE"] = "D:/.cache/huggingface"
+            os.environ["HF_HOME"] = "D:/.cache/huggingface"
         self.model_id = model_id
         # Set the torch device. "cuda" for GPU if available, otherwise "cpu".
-        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+        print(f"torch.cuda.is_available(): {torch.cuda.is_available()}")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Initialize model and tokenizer to None; they will be loaded later
         self.tokenizer = None
@@ -88,12 +95,15 @@ class AiModel:
             self.model_id,
             torch_dtype=torch.float32,
             trust_remote_code=True,
+            device_map="auto"
         ).to(self.device)
         logger.info(f"Model {self.model_id} loaded successfully. Total time {time.time() - start_time:.2f} seconds.")
 
         if need_resize_embeddings:
+            resize_start_time = time.time()
             logger.info(f"[{time.time()}] Resizing token embeddings to {len(self.tokenizer)}...")
             self.model.resize_token_embeddings(len(self.tokenizer))
+            logger.info(f"Resized token embeddings in {time.time() - resize_start_time:.2f} seconds.")
 
         self.model.config.use_cache = False
         self.model.eval()
@@ -112,7 +122,7 @@ class AiModel:
         try:
             logger.info(f"\nLoading tokenizer for: {model_id}...")
             start_time = time.time()
-            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
             logger.info(f"Successfully loaded tokenizer for {model_id}. Total time : {time.time() - start_time:.2f} seconds.")
         except Exception as e:
             logger.info(f"ERROR: Could not load tokenizer for {model_id}. Reason: {e}")

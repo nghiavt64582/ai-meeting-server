@@ -58,7 +58,7 @@ async def summarize_audio(
     number_of_words = content.count(' ') + content.count('.')
     time_1 = time.time()
     logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
-    logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content[:50]}")
+    logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content}")
     summarized_text = ai_model.summarize(text=content, summary_prompt=summary_prompt, is_use_gemini=model=="gemini")
     logger.info(f"Summarization took {time.time() - time_1:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - time_1):.2f}")
 
