@@ -93,7 +93,7 @@ class AiModel:
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
-            torch_dtype=torch.float32,
+            dtype=torch.float32,
             trust_remote_code=True,
             device_map="auto"
         ).to(self.device)
@@ -154,14 +154,16 @@ class AiModel:
 
         input_ids = input_ids.to(self.device)
         attention_mask = attention_mask.to(self.device)
-
+        # use cache if model is not Qwen 7B
+        use_cache = self.model_id != "Qwen/Qwen-7B-Chat"
+        logger.info(f"Generate by model {self.model_id}, use_cache: {use_cache}")
         with torch.no_grad():
             output_ids = self.model.generate(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 max_new_tokens=n_tokens, # Limit the number of new tokens generated
                 do_sample=True,     # Enable sampling for more varied responses
-                use_cache=True,    # As per your original configuration (Note: often True for speed)
+                use_cache=use_cache,
                 pad_token_id=self.tokenizer.pad_token_id
             )
         

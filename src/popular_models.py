@@ -20,6 +20,10 @@ popular_ai_models = [
         "description": "A large language model from Alibaba Cloud, designed for general-purpose chat and understanding diverse queries."
     },
     {
+        "id": "Qwen/Qwen2-7B-Instruct",
+        "description": "An advanced 7-billion parameter language model from Alibaba Cloud, optimized for instruction following and conversational tasks."
+    },
+    {
         "id": "google/gemma-2b-it",
         "description": "A 2-billion parameter language model by Google, designed for efficient text generation and understanding."
     },

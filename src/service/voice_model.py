@@ -6,13 +6,15 @@ from service.logger_setup import logger
 import shutil
 import subprocess
 import json
+import torch
 
 class VoiceModel:
     """
     A class to handle voice model operations, including loading the model and generating responses.
     """
-    def __init__(self, model_id: str, device: str = "cpu"):
+    def __init__(self, model_id: str):
         # os.environ["PATH"] += r";C:\Users\Administrator\Desktop\ffmpeg-7.1.1-essentials_build\bin"
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         try:
             self.whisper_model = whisper.load_model("base", device=device)
         except Exception as e:
@@ -115,4 +117,4 @@ class VoiceModel:
             return None
 
 
-voice_model = VoiceModel(model_id="base", device="cpu")
+voice_model = VoiceModel(model_id="base")
