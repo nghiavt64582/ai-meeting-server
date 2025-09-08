@@ -93,7 +93,6 @@ class AiModel:
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_id,
-            dtype=torch.float32,
             trust_remote_code=True,
             device_map="auto"
         ).to(self.device)
