@@ -18,16 +18,17 @@ async def root():
 
 @router.post("/transcribe-audio")
 async def transcribe_audio(
-    audio_file: UploadFile = File(...)
+    audio_file: UploadFile = File(...),
+    model: str = "os"
 ):
     """
     Transcribes an uploaded audio file using the Whisper model.
     """
     start_time = time.time()
-    transcribed_data = voice_model.transcribe_audio(audio_file)
+    transcribed_data = voice_model.transcribe_audio(audio_file, is_use_gemini=model=="gemini")
     content = transcribed_data.get("content", "")
     number_of_words = content.count(' ') + content.count('.')
-    logger.info(f"Transcription took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
+    logger.info(f"Transcription took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}, model: {model}")
     if content:
         return {
             "status_code": 200,
@@ -53,12 +54,12 @@ async def summarize_audio(
     """
 
     start_time = time.time()
-    transcribed_data = voice_model.transcribe_audio(audio_file)
+    transcribed_data = voice_model.transcribe_audio(audio_file, is_use_gemini=model=="gemini")
     content = transcribed_data.get("content", "")
     number_of_words = content.count(' ') + content.count('.')
     time_1 = time.time()
     logger.info(f"Transcription took {time_1 - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time_1 - start_time):.2f}")
-    logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content}")
+    logger.info(f"Starting summarization with prompt: {summary_prompt}, content {content[:50]}, model: {model}")
     summarized_text = ai_model.summarize(text=content, summary_prompt=summary_prompt, is_use_gemini=model=="gemini")
     logger.info(f"Summarization took {time.time() - time_1:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - time_1):.2f}")
 
@@ -86,7 +87,7 @@ async def summarize_text(
     start_time = time.time()
     summarized_text = ai_model.summarize(text=content, summary_prompt=summary_prompt, is_use_gemini=model=="gemini")
     number_of_words = content.count(' ') + content.count('.')
-    logger.info(f"Summarization took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}")
+    logger.info(f"Summarization took {time.time() - start_time:.2f} seconds. Words: {number_of_words}, WPS: {number_of_words / (time.time() - start_time):.2f}, model: {model}")
 
     if summarized_text:
         return {

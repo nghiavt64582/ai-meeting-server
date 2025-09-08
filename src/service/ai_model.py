@@ -35,7 +35,11 @@ class AiModel:
         self.tokenizer = None
         self.model = None
         self.load_model(model_id)
-        self.gemini_api_key = open("../.env").read().strip().split("=")[1]
+        try:
+            self.gemini_api_key = open("../.env").read().strip().split("=")[1]
+        except Exception as e:
+            logger.error("Failed to read Gemini API key from .env file: %s", e)
+            self.gemini_api_key = "Not found"
         logger.info(f"Gemini API key loaded: {self.gemini_api_key[:5]}")
         logger.info(f"[{time.time()}] AiModel instance initialized. Call .load_model() to load the model.")
 
@@ -130,7 +134,7 @@ class AiModel:
     def generate_response(self, text: str, n_tokens: Optional[int] = 100) -> str:
 
         start = time.time()
-        logger.info(f"Generating response for: {text}... with max tokens: {n_tokens}")
+        logger.info(f"Generating response for: {text[:50]}... with max tokens: {n_tokens}")
         messages = [
             {"role": "user", "content": f"{text.strip()}"}
         ]
@@ -206,7 +210,7 @@ class AiModel:
         Generate a summary of the provided text using the AI model.
         """
         prompt = f"{summary_prompt}\n{text}"
-        logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text}, n_tokens: {n_tokens}")
+        logger.info(f"Summarizing text with prompt: {summary_prompt}, content {text[:50]}, n_tokens: {n_tokens}")
         if is_use_gemini:
             return self.generate_response_by_gemini_api(prompt)
         else:

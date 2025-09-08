@@ -7,13 +7,20 @@ import shutil
 import subprocess
 import json
 import torch
-
+import requests
+import base64
+import mimetypes
 class VoiceModel:
     """
     A class to handle voice model operations, including loading the model and generating responses.
     """
     def __init__(self, model_id: str):
         # os.environ["PATH"] += r";C:\Users\Administrator\Desktop\ffmpeg-7.1.1-essentials_build\bin"
+        try:
+            self.gemini_api_key = open("../.env").read().strip().split("=")[1]
+        except Exception as e:
+            logger.error("Failed to read Gemini API key from .env file: %s", e)
+            self.gemini_api_key = "Not found"
         device = "cuda" if torch.cuda.is_available() else "cpu"
         try:
             self.whisper_model = whisper.load_model("base", device=device)
@@ -21,11 +28,10 @@ class VoiceModel:
             logging.error("Failed to load Whisper model: %s", e)
             raise
     
-    def transcribe_audio(self, audio_file: UploadFile = File(...)):
+    def transcribe_audio(self, audio_file: UploadFile = File(...), is_use_gemini: bool = False):
         temp_dir = "./temp"
         os.makedirs(temp_dir, exist_ok=True)
         temp_file_path = os.path.join(temp_dir, audio_file.filename)
-
 
         try:
             with open(temp_file_path, "wb") as buffer:
@@ -35,15 +41,19 @@ class VoiceModel:
             logger.info(f"Uploaded file: {audio_file.filename}, size {size_st}")
 
             logger.info(f"Transcribing file: {audio_file.filename}")
-            content = self.whisper_model.transcribe(temp_file_path, language="en")['text']
+            if is_use_gemini:
+                content = self.transcribe_audio_by_gemini_api(temp_file_path)
+            else:
+                content = self.whisper_model.transcribe(temp_file_path, language="en")['text']
 
             duration = self.get_duration(temp_file_path)
             logger.info(f"Duration of file: {audio_file.filename}, duration {duration} s")
-            return {
+            result = {
                 "content": content,
                 "size": size_st,
                 "duration": duration
             }
+            return result
         except Exception as e:
             logger.info(f"An error occurred during transcription: {e}")
             return ""
@@ -116,5 +126,47 @@ class VoiceModel:
             print(f"An unexpected error occurred while processing '{filepath}': {e}")
             return None
 
+    def transcribe_audio_by_gemini_api(self, audio_file_path: str) -> str:
+        gemini_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+
+        mime = mimetypes.guess_type(audio_file_path)[0] or "audio/wav"
+        with open(audio_file_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+
+        payload = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": (
+                                "Transcribe the following audio verbatim. "
+                                "Return only the transcript with no extra commentary."
+                            )
+                        },
+                        {   # <-- audio goes here
+                            "inline_data": {"mime_type": mime, "data": b64}
+                        }
+                    ],
+                }
+            ],
+            # Optional but nice:
+            "generationConfig": {"response_mime_type": "text/plain"}
+        }
+
+        r = requests.post(
+            gemini_url,
+            json=payload,
+            headers={
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": self.gemini_api_key,     # header is fine; query ?key=... also works
+            },
+            timeout=300,
+        )
+        r.raise_for_status()
+        data = r.json()
+
+        # extract first candidate text
+        return data["candidates"][0]["content"]["parts"][0].get("text", "")
 
 voice_model = VoiceModel(model_id="base")
