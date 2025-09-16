@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile
 import time
-from service.voice_model import voice_model
+from service.voice_model import get_voice_model
 from service.ai_model import ai_model
 from service.logger_setup import logger
 from api_dto import *
@@ -24,6 +24,7 @@ async def transcribe_audio(
     """
     Transcribes an uploaded audio file using the Whisper model.
     """
+    voice_model = get_voice_model()
     start_time = time.time()
     transcribed_data = voice_model.transcribe_audio(audio_file, is_use_gemini=model=="gemini")
     content = transcribed_data.get("content", "")
@@ -54,6 +55,7 @@ async def summarize_audio(
     Summary an audio with a few sentences
     """
 
+    voice_model = get_voice_model()
     start_time = time.time()
     transcribed_data = voice_model.transcribe_audio(audio_file, is_use_gemini=model=="gemini")
     content = transcribed_data.get("content", "")

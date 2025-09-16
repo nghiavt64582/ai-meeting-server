@@ -6,11 +6,14 @@ from service.logger_setup import logger
 import shutil
 import subprocess
 import json
-import torch
 import requests
 import base64
 import mimetypes
 import whisperx
+import ctranslate2 as c2
+from functools import lru_cache
+import pyannote
+import pandas as pd
 class VoiceModel:
     """
     A class to handle voice model operations, including loading the model and generating responses.
@@ -19,8 +22,9 @@ class VoiceModel:
         # os.environ["PATH"] += r";C:\Users\Administrator\Desktop\ffmpeg-7.1.1-essentials_build\bin"
         self.gemini_api_key = os.getenv("gemini_api_key", "").strip()
         logger.info(f"Gemini API Key: {self.gemini_api_key}")
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.compute = "float16" if self.device == "cuda" else "int8"
+
+        self.device, self.compute = self.pick_device_and_compute()
+        # self.compute = "float16" if self.device == "cuda" else "int8"
         try:
             self.whisper_model = whisperx.load_model(
                 "base", 
@@ -38,7 +42,10 @@ class VoiceModel:
             raise RuntimeError("Set biến môi trường HF_TOKEN trước khi chạy diarization.")
         else:
             logger.info(f"HF_TOKEN found, proceeding with diarization. Hf token: {self.hf_token}   ")
-        self.diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=self.hf_token, device=self.device)
+        self.diarize_model = pyannote.audio.Pipeline.from_pretrained(
+            "pyannote/speaker-diarization-3.1",
+            use_auth_token=self.hf_token
+        )
 
     def calculate_blocks(self, segments, max_block_size=500, max_chars=300, gap_threshold=1.0):
         blocks = []
@@ -95,12 +102,19 @@ class VoiceModel:
                     align_model, 
                     metadata, 
                     audio,
-                    device=self.device
+                    device=self.device,
+                    return_char_alignments=False
                 )
+                
+                diarize_ann = self.diarize_model(
+                    temp_file_path,
+                    min_speakers=2,
+                    max_speakers=3
+                )
+                diarize_df = self.annotation_to_df(diarize_ann)
 
-                diarize_segments = self.diarize_model(temp_file_path, min_speakers=2, max_speakers=3)
                 # 4) Gán speaker cho từng từ/segment và gộp thành lượt thoại
-                with_speaker = whisperx.assign_word_speakers(diarize_segments, result_aligned)
+                with_speaker = whisperx.assign_word_speakers(diarize_df, result_aligned)
                 
                 print(f"cur_result : {cur_result}")
                 print(f"with_speaker : {with_speaker}")
@@ -119,6 +133,9 @@ class VoiceModel:
             return result
         except Exception as e:
             logger.info(f"An error occurred during transcription: {e}")
+            # print stack trace
+            import traceback
+            traceback.print_exc()
             return ""
         finally:
             if os.path.exists(temp_file_path):
@@ -372,4 +389,41 @@ class VoiceModel:
                 del b["words"]
         return blocks
 
-voice_model = VoiceModel()
+    def pick_device_and_compute(self):
+        # Ưu tiên CUDA nếu CTranslate2 nhìn thấy GPU
+        has_ct2_cuda = False
+        try:
+            has_ct2_cuda = c2.get_cuda_device_count() > 0
+        except Exception:
+            has_ct2_cuda = False
+
+        device = "cuda" if has_ct2_cuda else "cpu"
+
+        # Hỏi các compute types mà CTranslate2 hỗ trợ trên device đó
+        supported = c2.get_supported_compute_types(device if device in ("cuda", "cpu") else "cpu")
+
+        # Thứ tự ưu tiên (GPU trước, CPU sau)
+        prefer = (["int8_float16", "float16", "int8_float32", "float32", "int8"]
+                if device == "cuda"
+                else ["int8", "int8_float32", "float32"])
+
+        for t in prefer:
+            if t in supported:
+                return device, t
+
+        # fallback an toàn
+        return device, "float32"
+    
+    def annotation_to_df(self, annotation):
+        rows = []
+        for segment, _, speaker in annotation.itertracks(yield_label=True):
+            rows.append({
+                "start": segment.start,
+                "end": segment.end,
+                "speaker": speaker
+            })
+        return pd.DataFrame(rows)
+
+@lru_cache(maxsize=1)
+def get_voice_model():
+    return VoiceModel()

@@ -13,7 +13,7 @@
   + Xem nvidia info: nvidia-smi
   + Forward port bằng cloudflare để test từ máy gốc
     + Vào setup mở cloudflare chạy tunnel --url http://localhost:8000
-    
+
 2. Forward port để test bằng cloud flare:
   + Tải cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
   + Giải nén và cài đặt cloudflared
@@ -22,3 +22,6 @@
 3. Đối với whisperx:
   + Tạo token trên huggingface và set biến môi trường HF_TOKEN để dùng diarization
   + Cần accept điều khoản sử dụng model whisperx trên huggingface
+
+4. Tip:
+  + Dùng pip freeze > requirements.txt để lưu các thư viện trong môi trường ảo
