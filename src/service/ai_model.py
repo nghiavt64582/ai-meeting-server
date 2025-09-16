@@ -6,13 +6,14 @@ from service.logger_setup import logger
 import requests
 import os
 from huggingface_hub import HfFolder
+import whisper
 
 class AiModel:
     """
     A class to encapsulate the Qwen language model and tokenizer for text generation.
     Handles model loading, tokenizer configuration, and response generation.
     """
-    def __init__(self, model_id: str = "Qwen/Qwen2-1.5B-Instruct", device: str = "cpu"):
+    def __init__(self, model_id: str = "Qwen/Qwen2-1.5B-Instruct"):
         """
         Initializes the AiModel with a specified model ID and device.
         Note: The actual model and tokenizer loading is deferred to the 'load' method.
@@ -27,8 +28,7 @@ class AiModel:
             os.environ["TRANSFORMERS_CACHE"] = "D:/.cache/huggingface"
             os.environ["HF_HOME"] = "D:/.cache/huggingface"
         self.model_id = model_id
-        # Set the torch device. "cuda" for GPU if available, otherwise "cpu".
-        print(f"torch.cuda.is_available(): {torch.cuda.is_available()}")
+        logger.info(f"torch.cuda.is_available(): {torch.cuda.is_available()}")
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # Initialize model and tokenizer to None; they will be loaded later
@@ -219,13 +219,13 @@ class AiModel:
     def get_cur_model(self) -> str:
         return self.model_id
 
-ai_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu")
+ai_model = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct")
 
 # --- Example Usage (for standalone testing) ---
 if __name__ == "__main__" and False:
     logger.info("Starting AiModel demonstration...")
 
-    model_handler = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct", device="cpu") # Default for CPU
+    model_handler = AiModel(model_id="Qwen/Qwen2-1.5B-Instruct")
 
     logger.info("\n--- Generating first response ---")
     test_question_1 = "What is the capital of France?"

@@ -34,7 +34,8 @@ async def transcribe_audio(
             "status_code": 200,
             "content": {
                 "transcription": content,
-                "number_of_words": number_of_words
+                "number_of_words": number_of_words,
+                "blocks": transcribed_data.get("blocks", [])
             }
         }
     else:
@@ -69,7 +70,8 @@ async def summarize_audio(
             "content": {
                 "transcription": content,
                 "summary": summarized_text,
-                "number_of_words": number_of_words
+                "number_of_words": number_of_words,
+                "blocks": transcribed_data.get("blocks", [])
             }
         }
     else:

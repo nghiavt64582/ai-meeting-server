@@ -10,23 +10,59 @@ import torch
 import requests
 import base64
 import mimetypes
+import whisperx
 class VoiceModel:
     """
     A class to handle voice model operations, including loading the model and generating responses.
     """
-    def __init__(self, model_id: str):
+    def __init__(self):
         # os.environ["PATH"] += r";C:\Users\Administrator\Desktop\ffmpeg-7.1.1-essentials_build\bin"
+        self.gemini_api_key = os.getenv("gemini_api_key", "").strip()
+        logger.info(f"Gemini API Key: {self.gemini_api_key}")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.compute = "float16" if self.device == "cuda" else "int8"
         try:
-            self.gemini_api_key = open("../.env").read().strip().split("=")[1]
-        except Exception as e:
-            logger.error("Failed to read Gemini API key from .env file: %s", e)
-            self.gemini_api_key = "Not found"
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        try:
-            self.whisper_model = whisper.load_model("base", device=device)
+            self.whisper_model = whisperx.load_model(
+                "base", 
+                device=self.device,
+                compute_type=self.compute
+            )
         except Exception as e:
             logging.error("Failed to load Whisper model: %s", e)
             raise
+
+        # set up diarization model
+        # load by key hf_token, the file .env is in previous of root folder
+        self.hf_token = os.getenv("hf_token", "").strip()
+        if not self.hf_token:
+            raise RuntimeError("Set biến môi trường HF_TOKEN trước khi chạy diarization.")
+        else:
+            logger.info(f"HF_TOKEN found, proceeding with diarization. Hf token: {self.hf_token}   ")
+        self.diarize_model = whisperx.diarize.DiarizationPipeline(use_auth_token=self.hf_token, device=self.device)
+
+    def calculate_blocks(self, segments, max_block_size=500, max_chars=300, gap_threshold=1.0):
+        blocks = []
+        cur = {
+            "start": segments[0]["start"],
+            "end": segments[0]["end"],
+            "text": segments[0]["text"].strip()
+        }
+
+        for s in segments[1:]:
+            gap = s["start"] - cur["end"]
+            if gap > gap_threshold or len(cur["text"]) >= max_chars:
+                blocks.append(cur)
+                cur = {
+                    "start": s["start"],
+                    "end": s["end"],
+                    "text": s["text"].strip()
+                }
+            else:
+                cur["end"] = s["end"]
+                cur["text"] += (" " if cur["text"] else "") + s["text"].strip()
+
+        blocks.append(cur)
+        return blocks
     
     def transcribe_audio(self, audio_file: UploadFile = File(...), is_use_gemini: bool = False):
         temp_dir = "./temp"
@@ -44,14 +80,41 @@ class VoiceModel:
             if is_use_gemini:
                 content = self.transcribe_audio_by_gemini_api(temp_file_path)
             else:
-                content = self.whisper_model.transcribe(temp_file_path, language="en")['text']
+                audio = whisperx.load_audio(temp_file_path)
+                cur_result = self.whisper_model.transcribe(
+                    audio,
+                    batch_size=16,
+                    language="en"
+                )
+                align_model, metadata = whisperx.load_align_model(
+                    language_code=cur_result["language"],
+                    device=self.device
+                )
+                result_aligned = whisperx.align(
+                    cur_result["segments"], 
+                    align_model, 
+                    metadata, 
+                    audio,
+                    device=self.device
+                )
+
+                diarize_segments = self.diarize_model(temp_file_path, min_speakers=2, max_speakers=3)
+                # 4) Gán speaker cho từng từ/segment và gộp thành lượt thoại
+                with_speaker = whisperx.assign_word_speakers(diarize_segments, result_aligned)
+                
+                print(f"cur_result : {cur_result}")
+                print(f"with_speaker : {with_speaker}")
+                content = cur_result.get("segments", [{}])[0].get("text", "")
+                blocks = self.calculate_block_by_whisperx(cur_result["segments"], with_speaker)
+                print(f"pBlock : {json.dumps(blocks)}")
 
             duration = self.get_duration(temp_file_path)
             logger.info(f"Duration of file: {audio_file.filename}, duration {duration} s")
             result = {
                 "content": content,
                 "size": size_st,
-                "duration": duration
+                "duration": duration,
+                "blocks": blocks if not is_use_gemini else []
             }
             return result
         except Exception as e:
@@ -168,5 +231,145 @@ class VoiceModel:
 
         # extract first candidate text
         return data["candidates"][0]["content"]["parts"][0].get("text", "")
+    
+    def calculate_block_by_whisperx(
+        self,
+        segments,                 # không dùng nhiều, giữ để tương thích
+        with_speaker: dict,
+        max_block_size: int = 500,
+        max_chars: int = 300,
+        gap_threshold: float = 1.0
+    ):
+        """
+        Gộp transcript thành các block theo người nói (speaker) dựa trên output đã gán speaker của whisperx.
 
-voice_model = VoiceModel(model_id="base")
+        Params:
+        - segments: list segment gốc của Whisper (để tương thích; có thể không dùng)
+        - with_speaker: dict từ whisperx.assign_word_speakers(...), kỳ vọng có key "segments"
+        - max_block_size: tối đa số từ trong 1 block
+        - max_chars: tối đa số ký tự text trong 1 block
+        - gap_threshold: nếu khoảng cách giữa 2 segment > ngưỡng (giây) thì tách block
+
+        Return:
+        - List[dict]: mỗi dict gồm {speaker, start, end, text, words, n_words}
+        """
+        diar_segments = (with_speaker or {}).get("segments", []) or []
+        if not diar_segments:
+            # fallback: không có diarization → gom thành 1 block, speaker=UNK
+            joined = " ".join(s.get("text", "").strip() for s in (segments or []) if s.get("text"))
+            if not joined:
+                return []
+            start = float((segments or [{}])[0].get("start", 0.0))
+            end = float((segments or [{}])[-1].get("end", 0.0))
+            return [{
+                "speaker": "SPEAKER_UNK",
+                "start": float(start),
+                "end": float(end),
+                "text": joined.strip(),
+                "words": [],
+                "n_words": 0,
+            }]
+
+        def _to_float(x, default=0.0):
+            try:
+                return float(x)
+            except Exception:
+                return default
+
+        def _majority_speaker(words):
+            # chọn speaker xuất hiện nhiều nhất, tie-break theo tổng duration
+            if not words:
+                return None
+            from collections import Counter, defaultdict
+            c = Counter()
+            dur = defaultdict(float)
+            for w in words:
+                spk = w.get("speaker")
+                if spk is None:
+                    continue
+                c[spk] += 1
+                dur[spk] += max(0.0, _to_float(w.get("end")) - _to_float(w.get("start")))
+            if not c:
+                return None
+            # ưu tiên theo count, rồi duration
+            best = sorted(c.items(), key=lambda kv: (kv[1], dur.get(kv[0], 0.0)), reverse=True)[0][0]
+            return best
+
+        blocks = []
+        cur = None
+
+        for seg in diar_segments:
+            if not seg:
+                continue
+            s_text = (seg.get("text") or "").strip()
+            if not s_text:
+                continue
+
+            s_words = seg.get("words") or []
+            s_speaker = seg.get("speaker") or _majority_speaker(s_words) or "SPEAKER_UNK"
+            s_start = _to_float(seg.get("start"), 0.0)
+            s_end = _to_float(seg.get("end"), s_start)
+
+            # Khởi tạo block đầu tiên
+            if cur is None:
+                cur = {
+                    "speaker": s_speaker,
+                    "start": s_start,
+                    "end": s_end,
+                    "text": s_text,
+                    "words": list(s_words),
+                }
+                continue
+
+            gap = max(0.0, s_start - _to_float(cur["end"], s_start))
+
+            # Điều kiện tách block
+            need_split = (
+                s_speaker != cur["speaker"] or
+                gap > gap_threshold or
+                (len(cur["text"]) + 1 + len(s_text) > max_chars) or
+                (len(cur["words"]) + len(s_words) > max_block_size)
+            )
+
+            if need_split:
+                # chốt block cũ
+                cur["n_words"] = len(cur["words"])
+                cur["start"] = _to_float(cur["start"])
+                cur["end"] = _to_float(cur["end"])
+                blocks.append(cur)
+
+                # mở block mới
+                cur = {
+                    "speaker": s_speaker,
+                    "start": s_start,
+                    "end": s_end,
+                    "text": s_text,
+                    "words": list(s_words),
+                }
+            else:
+                # gộp vào block hiện tại
+                cur["end"] = max(_to_float(cur["end"]), s_end)
+                # tránh 2 dấu cách
+                cur["text"] = (cur["text"] + " " + s_text).strip()
+                if s_words:
+                    cur["words"].extend(s_words)
+
+        # đẩy block cuối
+        if cur is not None:
+            cur["n_words"] = len(cur["words"])
+            cur["start"] = _to_float(cur["start"])
+            cur["end"] = _to_float(cur["end"])
+            blocks.append(cur)
+
+        # Chuẩn hoá: ép float cho start/end trong words (nếu bạn muốn JSON sạch)
+        for b in blocks:
+            for w in b["words"]:
+                if "start" in w: w["start"] = _to_float(w["start"])
+                if "end" in w:   w["end"]   = _to_float(w["end"])
+        # tạm thời xóa key "words" để giảm dung lượng trả về
+        for b in blocks:
+            if "words" in b:
+                del b["words"]
+        return blocks
+
+voice_model = VoiceModel()
