@@ -17,7 +17,7 @@ async def root():
     return {"message": "Upload an MP3 file to /summarize to get transcript and summary."}
 
 @router.post("/transcribe-audio")
-async def transcribe_audio(
+def transcribe_audio(
     audio_file: UploadFile = File(...),
     model: str = "os"
 ):

@@ -2,14 +2,19 @@
   + Vào folder setup và chạy các file tương ứng
   + Dùng đúng python 3.12 ()
   + Cài path cho ffmpeg: Desktop\ffmpeg-2025-09-08-git-45db6945e9-essentials_build\bin
-  + Tạo môi trường ảo: py -3.12 -m venv .venv
+  + Tạo môi trường ảo: 
+    + Window : py -3.12 -m venv .venv
+    + MacOS/Linux: python3.12 -m venv .venv
   + Kích hoạt virtual environment:
     + Window: .\.venv\Scripts\activate
     + MacOS/Linux: source .venv/bin/activate
-  + pip install accelerate transformers fastapi uvicorn openai-whisper python-multipart einops transformers_stream_generator whisperx optimum
+    + Thoát khỏi môi trường ảo: deactivate
+  + pip install accelerate transformers fastapi uvicorn openai-whisper python-multipart einops transformers_stream_generator whisperx dotenv
   + Cài torch cho gpu : pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
   + Cài đặt các thư viện cần thiết: pip install -r requirements.txt
-  + Chạy ứng dụng: uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ..\.env --reload
+  + Chạy ứng dụng: 
+    + Window: uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ..\.env --reload
+    + Linux: uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ../.env --reload
   + Xem nvidia info: nvidia-smi
   + Forward port bằng cloudflare để test từ máy gốc
     + Vào setup mở cloudflare chạy tunnel --url http://localhost:8000

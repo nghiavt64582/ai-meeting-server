@@ -1,4 +1,3 @@
-import whisper
 import logging
 from fastapi import APIRouter, FastAPI, File, UploadFile
 import os
@@ -10,6 +9,7 @@ import requests
 import base64
 import mimetypes
 import whisperx
+import torch
 import ctranslate2 as c2
 from functools import lru_cache
 import pyannote
@@ -24,7 +24,7 @@ class VoiceModel:
         logger.info(f"Gemini API Key: {self.gemini_api_key}")
 
         self.device, self.compute = self.pick_device_and_compute()
-        # self.compute = "float16" if self.device == "cuda" else "int8"
+        logger.info(f"Using device: {self.device}, compute: {self.compute}")
         try:
             self.whisper_model = whisperx.load_model(
                 "base", 
@@ -114,15 +114,14 @@ class VoiceModel:
 
                 # 4) Gán speaker cho từng từ/segment và gộp thành lượt thoại
                 with_speaker = whisperx.assign_word_speakers(diarize_df, result_aligned)
-                
-                print(f"cur_result : {cur_result}")
-                print(f"with_speaker : {with_speaker}")
-                content = cur_result.get("segments", [{}])[0].get("text", "")
+                logger.info(f"cur_result: {cur_result}")
+                content = " ".join(s.get("text", "").strip() for s in cur_result.get("segments", []) if s.get("text"))
                 blocks = self.calculate_block_by_whisperx(cur_result["segments"], with_speaker)
-                print(f"pBlock : {json.dumps(blocks)}")
+                for block in blocks:
+                    logger.info(f"{block['speaker']} : {block['start']:.1f} --> {block['end']:.1f} : {block['text']}")
 
             duration = self.get_duration(temp_file_path)
-            logger.info(f"Duration of file: {audio_file.filename}, duration {duration} s")
+            logger.info(f"Duration : {duration} s")
             result = {
                 "content": content,
                 "size": size_st,
@@ -390,28 +389,21 @@ class VoiceModel:
 
     def pick_device_and_compute(self):
         # Ưu tiên CUDA nếu CTranslate2 nhìn thấy GPU
-        has_ct2_cuda = False
-        try:
-            has_ct2_cuda = c2.get_cuda_device_count() > 0
-        except Exception:
-            has_ct2_cuda = False
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        device = "cuda" if has_ct2_cuda else "cpu"
+        if device == "cuda":
+            # Kiểm tra compute capability để quyết định FP16
+            try:
+                major, minor = torch.cuda.get_device_capability(0)
+            except Exception:
+                major, minor = (0, 0)
 
-        # Hỏi các compute types mà CTranslate2 hỗ trợ trên device đó
-        supported = c2.get_supported_compute_types(device if device in ("cuda", "cpu") else "cpu")
+            # Turing/Ampere/Ada (>= 7.0) dùng FP16 hiệu quả
+            precision = "float16" if major >= 7 else "float32"
+        else:
+            precision = "float32"
 
-        # Thứ tự ưu tiên (GPU trước, CPU sau)
-        prefer = (["int8_float16", "float16", "int8_float32", "float32", "int8"]
-                if device == "cuda"
-                else ["int8", "int8_float32", "float32"])
-
-        for t in prefer:
-            if t in supported:
-                return device, t
-
-        # fallback an toàn
-        return device, "float32"
+        return device, precision
     
 
 @lru_cache(maxsize=1)

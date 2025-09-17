@@ -9,3 +9,7 @@ note.txt
 .env
 /test
 /setup
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
