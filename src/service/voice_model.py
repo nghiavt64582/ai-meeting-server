@@ -114,7 +114,6 @@ class VoiceModel:
 
                 # 4) Gán speaker cho từng từ/segment và gộp thành lượt thoại
                 with_speaker = whisperx.assign_word_speakers(diarize_df, result_aligned)
-                logger.info(f"cur_result: {cur_result}")
                 content = " ".join(s.get("text", "").strip() for s in cur_result.get("segments", []) if s.get("text"))
                 blocks = self.calculate_block_by_whisperx(cur_result["segments"], with_speaker)
                 for block in blocks:
