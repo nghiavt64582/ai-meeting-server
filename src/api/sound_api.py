@@ -106,3 +106,5 @@ async def summarize_text(
             "status_code": 500,
             "content": {"message": "An error occurred during summarization."}
         }
+    
+voice_model = get_voice_model()

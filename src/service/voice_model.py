@@ -42,9 +42,9 @@ class VoiceModel:
             raise RuntimeError("Set biến môi trường HF_TOKEN trước khi chạy diarization.")
         else:
             logger.info(f"HF_TOKEN found, proceeding with diarization. Hf token: {self.hf_token}   ")
-        self.diarize_model = pyannote.audio.Pipeline.from_pretrained(
-            "pyannote/speaker-diarization-3.1",
-            use_auth_token=self.hf_token
+        self.diarize_model = whisperx.diarize.DiarizationPipeline(
+            use_auth_token=self.hf_token,
+            device=self.device  # "cpu"
         )
 
     def calculate_blocks(self, segments, max_block_size=500, max_chars=300, gap_threshold=1.0):
@@ -106,12 +106,11 @@ class VoiceModel:
                     return_char_alignments=False
                 )
                 
-                diarize_ann = self.diarize_model(
+                diarize_df = self.diarize_model(
                     temp_file_path,
                     min_speakers=2,
                     max_speakers=3
                 )
-                diarize_df = self.annotation_to_df(diarize_ann)
 
                 # 4) Gán speaker cho từng từ/segment và gộp thành lượt thoại
                 with_speaker = whisperx.assign_word_speakers(diarize_df, result_aligned)
@@ -414,15 +413,6 @@ class VoiceModel:
         # fallback an toàn
         return device, "float32"
     
-    def annotation_to_df(self, annotation):
-        rows = []
-        for segment, _, speaker in annotation.itertracks(yield_label=True):
-            rows.append({
-                "start": segment.start,
-                "end": segment.end,
-                "speaker": speaker
-            })
-        return pd.DataFrame(rows)
 
 @lru_cache(maxsize=1)
 def get_voice_model():
