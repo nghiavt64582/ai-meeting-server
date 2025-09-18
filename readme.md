@@ -17,9 +17,9 @@
     + Window: .\.venv\Scripts\activate
     + MacOS/Linux: source .venv/bin/activate
     + Thoát khỏi môi trường ảo: deactivate
-  + pip install accelerate transformers fastapi uvicorn openai-whisper python-multipart einops transformers_stream_generator whisperx dotenv
-  + Cài torch cho gpu : pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
   + Cài đặt các thư viện cần thiết: pip install -r requirements.txt
+  + Cài torch cho gpu : pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+  + pip install fastapi huggingface_hub openai_whisper pydantic requests transformers whisperx whisper uvicorn dotenv accelerate transformers fastapi openai-whisper python-multipart einops transformers_stream_generator
   + Chạy ứng dụng: 
     + Window: uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ..\.env --reload
     + Linux: uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ../.env --reload
@@ -38,3 +38,6 @@
 
 4. Tip:
   + Dùng pip freeze > requirements.txt để lưu các thư viện trong môi trường ảo
+  + Untrack các file .pyc trong git bằng cách thêm vào .gitignore file:
+    + *.pyc
+    + __pycache__/

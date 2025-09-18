@@ -11,7 +11,6 @@ import mimetypes
 import whisperx
 import torch
 from functools import lru_cache
-import pandas as pd
 class VoiceModel:
     """
     A class to handle voice model operations, including loading the model and generating responses.
