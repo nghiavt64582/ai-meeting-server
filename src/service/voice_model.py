@@ -10,9 +10,7 @@ import base64
 import mimetypes
 import whisperx
 import torch
-import ctranslate2 as c2
 from functools import lru_cache
-import pyannote
 import pandas as pd
 class VoiceModel:
     """

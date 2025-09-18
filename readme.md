@@ -1,6 +1,14 @@
 1. Các bước cài đặt:
   + Vào folder setup và chạy các file tương ứng
   + Dùng đúng python 3.12 ()
+    + Trên Linux: 
+      + sudo apt update
+      + sudo apt install software-properties-common -y
+      + sudo add-apt-repository ppa:deadsnakes/ppa -y
+      + sudo apt update
+      + sudo apt install python3.12 python3.12-venv python3.12-dev -y
+    + Trên Windows:
+      + 
   + Cài path cho ffmpeg: Desktop\ffmpeg-2025-09-08-git-45db6945e9-essentials_build\bin
   + Tạo môi trường ảo: 
     + Window : py -3.12 -m venv .venv
