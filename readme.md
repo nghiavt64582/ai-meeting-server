@@ -27,6 +27,21 @@
   + Forward port bằng cloudflare để test từ máy gốc
     + Vào setup mở cloudflare chạy tunnel --url http://localhost:8000
 
+==> bat để chạy trên linux: run.sh
+      + sudo apt update
+      + sudo apt install software-properties-common -y
+      + sudo add-apt-repository ppa:deadsnakes/ppa -y
+      + sudo apt update
+      + sudo apt install python3.12 python3.12-venv python3.12-dev -y
+      + python3.12 -m venv .venv
+      + source .venv/bin/activate
+      + apt install ffmpeg -y
+      + pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+      + pip install fastapi huggingface_hub openai_whisper pydantic requests transformers whisperx whisper uvicorn dotenv accelerate transformers fastapi openai-whisper python-multipart einops transformers_stream_generator
+      + cd src
+      + uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ../.env --reload
+
+
 2. Forward port để test bằng cloud flare:
   + Tải cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation
   + Giải nén và cài đặt cloudflared
