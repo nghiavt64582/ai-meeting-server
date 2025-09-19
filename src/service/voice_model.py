@@ -9,6 +9,7 @@ import requests
 import base64
 import mimetypes
 import whisperx
+import whisper
 import torch
 from functools import lru_cache
 class VoiceModel:
@@ -23,7 +24,7 @@ class VoiceModel:
         self.device, self.compute = self.pick_device_and_compute()
         logger.info(f"Using device: {self.device}, compute: {self.compute}")
         try:
-            self.whisper_model = whisperx.load_model(
+            self.whisper_model = whisper.load_model(
                 "base", 
                 device=self.device,
                 compute_type=self.compute
