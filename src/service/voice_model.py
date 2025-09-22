@@ -9,7 +9,7 @@ import requests
 import base64
 import mimetypes
 import whisperx
-import whisper
+from whisperx.diarize import DiarizationPipeline
 import torch
 from functools import lru_cache
 class VoiceModel:
@@ -24,10 +24,10 @@ class VoiceModel:
         self.device, self.compute = self.pick_device_and_compute()
         logger.info(f"Using device: {self.device}, compute: {self.compute}")
         try:
-            self.whisper_model = whisper.load_model(
+            self.whisper_model = whisperx.load_model(
                 "base", 
-                device=self.device,
-                compute_type=self.compute
+                compute_type=self.compute,
+                device=self.device
             )
         except Exception as e:
             logging.error("Failed to load Whisper model: %s", e)
@@ -40,7 +40,7 @@ class VoiceModel:
             raise RuntimeError("Set biến môi trường HF_TOKEN trước khi chạy diarization.")
         else:
             logger.info(f"HF_TOKEN found, proceeding with diarization. Hf token: {self.hf_token}   ")
-        self.diarize_model = whisperx.diarize.DiarizationPipeline(
+        self.diarize_model = DiarizationPipeline(
             use_auth_token=self.hf_token,
             device=self.device  # "cpu"
         )
@@ -88,8 +88,8 @@ class VoiceModel:
                 audio = whisperx.load_audio(temp_file_path)
                 cur_result = self.whisper_model.transcribe(
                     audio,
-                    batch_size=16,
-                    language="en"
+                    language="en",
+                    batch_size=16
                 )
                 align_model, metadata = whisperx.load_align_model(
                     language_code=cur_result["language"],

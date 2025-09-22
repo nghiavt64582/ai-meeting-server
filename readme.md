@@ -1,4 +1,5 @@
 1. Các bước cài đặt:
+  + Clone : git clone https://github.com/nghiavt64582/AiVoiceRecorder.git
   + Vào folder setup và chạy các file tương ứng
   + Dùng đúng python 3.12 ()
     + Trên Linux: 

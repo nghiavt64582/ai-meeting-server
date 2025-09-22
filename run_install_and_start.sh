@@ -28,5 +28,6 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install fastapi huggingface_hub openai_whisper pydantic requests transformers whisperx whisper uvicorn dotenv accelerate openai-whisper python-multipart einops transformers_stream_generator
 
 # --- Chạy FastAPI app ---
-cd src
-uvicorn main:app --host 0.0.0.0 --port 8000 --env-file ../.env --reload
+#!/bin/bash
+uvicorn main:app --app-dir src --host 0.0.0.0 --port 8000 --env-file .env --reload
+
