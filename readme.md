@@ -61,6 +61,23 @@
 5. Build docker:
   + Build image: docker build -t ai-app .
   + Run container: 
-    + Window : docker run -it --rm -v %cd%\hf_cache:/root/.cache/huggingface --name ai-app ai-app
-    + Linux : docker run -it --rm -v $(pwd)/hf_cache:/root/.cache/huggingface ai-app
+    + Window : docker run -d --name ai-app --gpus all ^
+  -e PUID=1000 -e PGID=1000 -e TZ=Asia/Bangkok ^
+  -e WHISPER_MODEL=tiny-int8 ^
+  -e WHISPER_LANG=en ^
+  -e WHISPER_BEAM=1 ^
+  -p 8000:8000 -p 10300:10300 ^
+  -v "%USERPROFILE%\.cache\huggingface:/config/huggingface" ^
+  ai-app
+
+    + Linux : docker run -d --name ai-app --gpus all \
+  -e PUID=1000 -e PGID=1000 -e TZ=Asia/Bangkok \
+  -e WHISPER_MODEL=tiny-int8 \        # hoặc base / small / medium / large-v3 ...
+  -e WHISPER_LANG=en \                # (tuỳ chọn)
+  -e WHISPER_BEAM=1 \                 # (tuỳ chọn)
+  -p 8000:8000 -p 10300:10300 \
+  -v $HOME/.cache/huggingface:/config/huggingface \
+  ai-app
+  + Vào container: docker exec -it ai-app /bin/bash
+
 

@@ -83,7 +83,7 @@ async def summarize_audio(
         }
     
 @router.post("/summarize-text")
-async def summarize_text(
+def summarize_text(
     content: str, 
     summary_prompt: str = "Summarize this conversation in a few sentences :",
     model: str = "os"
