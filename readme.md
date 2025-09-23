@@ -57,3 +57,10 @@
   + Untrack các file .pyc trong git bằng cách thêm vào .gitignore file:
     + *.pyc
     + __pycache__/
+
+5. Build docker:
+  + Build image: docker build -t ai-app .
+  + Run container: 
+    + Window : docker run -it --rm -v %cd%\hf_cache:/root/.cache/huggingface --name ai-app ai-app
+    + Linux : docker run -it --rm -v $(pwd)/hf_cache:/root/.cache/huggingface ai-app
+
