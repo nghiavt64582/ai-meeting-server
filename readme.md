@@ -60,24 +60,27 @@
 
 5. Build docker:
   + Build image: docker build -t ai-app .
+  + Tạo folder hf_cache và torch_cache để lưu cache model
+    + mkdir -p $(pwd)/hf_cache
+    + mkdir -p $(pwd)/torch_cache
   + Run container: 
-    + Window : docker run -d --name ai-app --gpus all ^
-  -e PUID=1000 -e PGID=1000 -e TZ=Asia/Bangkok ^
-  -e WHISPER_MODEL=tiny-int8 ^
-  -e WHISPER_LANG=en ^
-  -e WHISPER_BEAM=1 ^
-  -p 8000:8000 -p 10300:10300 ^
-  -v "%USERPROFILE%\.cache\huggingface:/config/huggingface" ^
-  ai-app
-
-    + Linux : docker run -d --name ai-app --gpus all \
-  -e PUID=1000 -e PGID=1000 -e TZ=Asia/Bangkok \
-  -e WHISPER_MODEL=tiny-int8 \        # hoặc base / small / medium / large-v3 ...
-  -e WHISPER_LANG=en \                # (tuỳ chọn)
-  -e WHISPER_BEAM=1 \                 # (tuỳ chọn)
-  -p 8000:8000 -p 10300:10300 \
-  -v $HOME/.cache/huggingface:/config/huggingface \
-  ai-app
+    + Window : docker run --rm -it --name ai-app-con -p 8000:8000 -v $(pwd)/hf_cache:/root/.cache/huggingface --gpus all -v $(pwd)/torch_cache:/root/.cache/torch ai-app 
+    + Linux : docker run --rm -it --name ai-app-con -p 8000:8000 -v $(pwd)/hf_cache:/root/.cache/huggingface --gpus all -v $(pwd)/torch_cache:/root/.cache/torch ai-app
   + Vào container: docker exec -it ai-app /bin/bash
 
+6. Cài NVIDIA Container Toolkit
 
+  + Trên host (Linux), làm:
+    # Add repo
+    + distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+    + curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add -
+    + curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+      sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+    # Update & install
+    + sudo apt-get update
+    + sudo apt-get install -y nvidia-container-toolkit
+
+  + Rồi cấu hình Docker để dùng nó:
+    + sudo nvidia-ctk runtime configure --runtime=docker
+    + sudo systemctl restart docker
