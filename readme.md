@@ -72,15 +72,15 @@
 
   + Trên host (Linux), làm:
     # Add repo
-    + distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-    + curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add -
-    + curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+       distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+       curl -s -L https://nvidia.github.io/libnvidia-container/gpgkey | sudo apt-key add -
+       curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
       sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 
     # Update & install
-    + sudo apt-get update
-    + sudo apt-get install -y nvidia-container-toolkit
+      sudo apt-get update
+      sudo apt-get install -y nvidia-container-toolkit
 
   + Rồi cấu hình Docker để dùng nó:
-    + sudo nvidia-ctk runtime configure --runtime=docker
-    + sudo systemctl restart docker
+      sudo nvidia-ctk runtime configure --runtime=docker
+      sudo systemctl restart docker
